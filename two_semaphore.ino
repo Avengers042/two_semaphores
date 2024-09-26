@@ -1,120 +1,86 @@
-// Vehicles LEDs
-const int vehicleRed = 10;
-const int vehicleYellow = 9;
-const int vehicleGreen = 8;
+// C++ code
+//
+int ultrassonic = 0;
 
-// Pedestrian LEDs
-const int pedestrianRed = 7;
-const int pedestrianGreen = 6;
+int semaphoreState = 0;
 
-// Non-LEDS
-const int pedestrianButton = 5;
-const int buzzer = 4;
-const int ultrasonicTriggerPing = 3;
-const int ultrasonicEchoPin = 3;
-const int semaphoreButton = 2;
-
-// Ultrasonic constants
-const int speedSoundInCmDividedByTwo = 0.01723;
-const int minRangeInCm = 20;
-const int maxRangeInCm = 330;
-int distanceInCm = 0;
-
-// Buttons States
-bool semaphoreState = false;
-bool buttonState = false;
+int pedestrianButton = 0;
 
 long readUltrasonicDistance(int triggerPin, int echoPin)
 {
-    pinMode(triggerPin, OUTPUT);
-    digitalWrite(triggerPin, LOW);
-    delayMicroseconds(2);
-
-    digitalWrite(triggerPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(triggerPin, LOW);
-    pinMode(echoPin, INPUT);
-
-    return pulseIn(echoPin, HIGH);
+  pinMode(triggerPin, OUTPUT);  // Clear the trigger
+  digitalWrite(triggerPin, LOW);
+  delayMicroseconds(2);
+  // Sets the trigger pin to HIGH state for 10 microseconds
+  digitalWrite(triggerPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(triggerPin, LOW);
+  pinMode(echoPin, INPUT);
+  // Reads the echo pin, and returns the sound wave travel time in microseconds
+  return pulseIn(echoPin, HIGH);
 }
 
-void blinkPedestrianRed(int onDuration, int offDuration) {
-    digitalWrite(pedestrianRed, HIGH);
-    tone(buzzer, 100, onDuration);
-    delay(onDuration);
-    digitalWrite(pedestrianRed, LOW);
-    delay(offDuration);
-}
-
-void startSemaphore()
-{
-    digitalWrite(pedestrianRed, HIGH);
-    digitalWrite(vehicleGreen, HIGH);
-    delay(3000);
-
-    digitalWrite(vehicleGreen, LOW);
-    digitalWrite(vehicleYellow, HIGH);
-    delay(10000);
-
-    digitalWrite(vehicleYellow, LOW);
-    digitalWrite(vehicleRed, HIGH);
-    delay(3000);
-
-    digitalWrite(pedestrianRed, LOW);
-    digitalWrite(pedestrianGreen, HIGH);
-    tone(buzzer, 400, 10000);
-    delay(10000);
-
-    digitalWrite(pedestrianGreen, LOW);
-
-    for (int counter = 0; counter < 4; ++counter) {
-        blinkPedestrianRed(500, 1000);
-    }
-
-    digitalWrite(pedestrianRed, HIGH);
-    delay(2000);
-    digitalWrite(vehicleRed, LOW);
-    digitalWrite(vehicleGreen, HIGH);
-}
-
-void letPedestrianCross()
-{
-    tone(buzzer, 100, 10000);
-    digitalWrite(vehicleRed, HIGH);
-    digitalWrite(pedestrianRed, LOW);
-    digitalWrite(pedestrianGreen, HIGH);
-    delay(10000);
-    digitalWrite(pedestrianGreen, LOW);
-    digitalWrite(vehicleRed, LOW);
-}
+int counter;
 
 void setup()
 {
-    pinMode(pedestrianButton, INPUT);
-    pinMode(semaphoreButton, INPUT);
-
-    pinMode(vehicleRed, OUTPUT);
-    pinMode(vehicleYellow, OUTPUT);
-    pinMode(vehicleGreen, OUTPUT);
-    pinMode(pedestrianRed, OUTPUT);
-    pinMode(pedestrianGreen, OUTPUT);
-    pinMode(buzzer, OUTPUT);
-    Serial.begin(9600);
+  pinMode(2, INPUT);
+  pinMode(5, INPUT);
+  Serial.begin(9600);
+  pinMode(4, OUTPUT);
+  pinMode(10, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(7, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(2, OUTPUT);
 }
 
 void loop()
 {
-  	semaphoreState = digitalRead(semaphoreButton);
-    if (semaphoreState == HIGH) {
-        buttonState = digitalRead(pedestrianButton);
-        distanceInCm = speedSoundInCmDividedByTwo * readUltrasonicDistance(ultrasonicTriggerPing, ultrasonicEchoPin);
-        Serial.println(distanceInCm);
-        delay(100);
-
-        if (distanceInCm >= 2 && distanceInCm <= 330 || buttonState != LOW) {
-            letPedestrianCross();
-        } else {
-            startSemaphore();
-        }
+  semaphoreState = digitalRead(2);
+  while (semaphoreState == HIGH) {
+    pedestrianButton = digitalRead(5);
+    ultrassonic = 0.01723 * readUltrasonicDistance(3, 3);
+    Serial.println(ultrassonic);
+    delay(100); // Wait for 100 millisecond(s)
+    if (ultrassonic >= 2 && ultrassonic <= 330 || pedestrianButton != LOW) {
+      tone(4, 294, 10000); // play tone 50 (D4 = 294 Hz)
+      digitalWrite(10, HIGH);
+      digitalWrite(9, LOW);
+      digitalWrite(8, LOW);
+      digitalWrite(7, LOW);
+      digitalWrite(6, HIGH);
+      delay(10000); // Wait for 10000 millisecond(s)
+      digitalWrite(6, LOW);
+      digitalWrite(10, LOW);
+    } else {
+      digitalWrite(7, HIGH);
+      digitalWrite(8, HIGH);
+      delay(3000); // Wait for 3000 millisecond(s)
+      digitalWrite(8, LOW);
+      digitalWrite(9, HIGH);
+      delay(10000); // Wait for 10000 millisecond(s)
+      digitalWrite(9, LOW);
+      digitalWrite(10, HIGH);
+      delay(3000); // Wait for 3000 millisecond(s)
+      digitalWrite(7, LOW);
+      digitalWrite(6, HIGH);
+      tone(4, 69, 10000); // play tone 25 (C#2 = 69 Hz)
+      delay(10000); // Wait for 10000 millisecond(s)
+      digitalWrite(6, LOW);
+      for (counter = 0; counter < 4; ++counter) {
+        digitalWrite(7, HIGH);
+        tone(4, 294, 1000); // play tone 50 (D4 = 294 Hz)
+        delay(500); // Wait for 500 millisecond(s)
+        digitalWrite(7, LOW);
+        delay(1000); // Wait for 1000 millisecond(s)
+      }
+      digitalWrite(7, HIGH);
+      delay(2000); // Wait for 2000 millisecond(s)
+      digitalWrite(10, LOW);
+      digitalWrite(8, HIGH);
     }
+  }
+  digitalWrite(2, LOW);
 }
